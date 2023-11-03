@@ -9,12 +9,9 @@ class User(Base):
 
         Attributes
             id (int): primary key
-
-            fullname (str)
-
-            email (str)
-
-            password (str)
+            fullname (str): 유저의 전체 이름
+            email (str): 유저의 이메일 (unique)
+            password (str): 유저의 비밀번호
     '''
     __tablename__ = "user"
 
@@ -30,17 +27,14 @@ class Board(Base):
 
         Attributes
             id (int): primary key
-
-            name (str)
-            
+            name (str): 게시판 이름 (unique)
             public (bool): 게시판 공개 여부 Flag
-            
             posts (list): 해당 게시판에 속한 게시글 목록
     '''
     __tablename__ = "board"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     public = Column(Boolean, nullable=False)
     posts = relationship("Post", backref="board")
 
@@ -51,12 +45,9 @@ class Post(Base):
 
         Attributes
             id (int): primary key
-
             board_id (int): foreign key, Board 객체의 id
-
-            title (str)
-
-            content (str)
+            title (str): 게시글의 제목
+            content (str): 게시글의 내용
     '''
     __tablename__ = "post"
 

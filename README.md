@@ -7,11 +7,14 @@ def foo():
     '''
     Function Description
 
-        Arguements:
+        Arguements
             a (int): integer
 
-        Returns:
+        Returns
             b (bool): boolean
+
+        Exceptions
+            Error Type: error explanation
     '''
     return
 

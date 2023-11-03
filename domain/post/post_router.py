@@ -11,21 +11,22 @@ router = APIRouter(
 
 
 @router.post("/create")
-def post_create(created_post: post_schema.CreatePost, db: Session = Depends(get_db)):
+def post_create(created_post: post_schema.Post, db: Session = Depends(get_db)):
     '''
     게시글 생성 함수
 
     새로운 board 객체를 생성하고 DB에 저장
 
-        Arguements:
+        Arguments
             CreatePost (board_id, title, content): 게시글 생성 입력 Schema
             db: DB 세션
 
-        Returns:
+        Returns
             생성한 post 객체
     '''
+    ## board 아이디 없는 경우
     _post = Post(
-        board_id = created_post.board_id,
+        board_id = created_post.id,
         title = created_post.title,
         content = created_post.content
     )
@@ -35,17 +36,17 @@ def post_create(created_post: post_schema.CreatePost, db: Session = Depends(get_
 
 
 @router.put("/update")
-def post_update(updated_post: post_schema.UpdatePost, db: Session = Depends(get_db)):
+def post_update(updated_post: post_schema.Post, db: Session = Depends(get_db)):
     '''
     게시글 수정 함수
 
     입력받은 id가 일치하는 게시글의 title과 content를 수정하고 DB 저장
 
-        Arguements:
+        Arguments
             UpdatedPost (id, title, content)
             db: DB 세션
 
-        Returns:
+        Returns
             수정한 post 객체
     '''
     _post = db.query(Post).get(updated_post.id)
@@ -64,14 +65,14 @@ def post_delete(post_id : int, db: Session = Depends(get_db)):
 
     게시글 id를 입력받아 해당 게시글을 DB에서 삭제
 
-        Arguements:
+        Arguments
             post_id (int): 삭제할 게시글의 id
             db : DB 세션
 
-        Returns:
+        Returns
             삭제 완료 메시지
 
-        Exceptions:
+        Exceptions
             게시글 조회 불가 메시지: 입력한 id와 일치하는 게시글이 없는 경우
 
     '''
@@ -91,14 +92,14 @@ def post_detail(post_id : int, db: Session = Depends(get_db)):
 
     게시글 ID를 입력받아 해당 게시글을 조회
 
-        Arguements:
+        Arguments
             post_id (int): 조회할 게시글의 id
             db: DB 세션
 
-        Returns:
+        Returns
             조회하는 게시글 객체
 
-        Exceptions:
+        Exceptions
             게시글 조회 불가 메시지: 입력한 id와 일치하는 게시글이 없는 경우
     '''
     _post = db.query(Post).get(post_id)
@@ -114,10 +115,10 @@ def post_list(db: Session = Depends(get_db)):
 
     전체 게시글 목록을 조회
 
-        Arguements:
+        Arguments
             db: DB 세션
 
-        Returns:
+        Returns
             전체 게시글 목록
     '''
     _post_list = db.query(Post).all()
