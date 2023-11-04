@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
+from src.utils.config import get_settings
 from src.core.database import get_db
-from src.domain.post import post_schema
 from src.core.models import Post, User, Board
+from src.domain.post import post_schema
 from src.domain.user.user_router import get_current_user
 
 router = APIRouter(
@@ -154,7 +155,8 @@ def post_list(board_id: int,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     _post_list = db.query(Board).get(board_id).posts
 
-    size = 2
+    settings = get_settings()
+    size = settings.PAGE_SIZE
     return {
         "post_count": len(_post_list),
         "post_list": _post_list[page*size:page*size+size]

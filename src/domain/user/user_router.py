@@ -1,10 +1,8 @@
-from datetime import timedelta, datetime
 from typing import Annotated
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from jose import jwt
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
@@ -12,8 +10,9 @@ from src.core.models import User
 from src.core.database import get_db
 from src.domain.user import user_schema
 from src.core.redis_config import get_redis
+from src.utils.config import Settings, get_settings
 
-ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24
+# ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/login')
 
@@ -49,10 +48,11 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not user or not pwd_context.verify(form.password, user.password):
         raise ValueError('이메일 또는 비밀번호가 잘못되었습니다.')
     
+    settings = get_settings()
     access_token = secrets.token_hex(32)
     rd = get_redis()
     rd.set(access_token, user.id)
-    rd.expire(access_token, ACCESS_TOKEN_EXPIRE_SECONDS)
+    rd.expire(access_token, settings.ACCESS_TOKEN_EXPIRE_SECONDS)
 
     return {
         "access_token": access_token,
