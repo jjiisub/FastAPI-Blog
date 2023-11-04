@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from database import get_db
-from domain.board import board_schema
-from models import Board
+from src.core.database import get_db
+from src.domain.board import board_schema
+from src.core.models import Board
 
 router = APIRouter(
     prefix="/board"
@@ -47,7 +47,6 @@ def board_create(created_board: board_schema.CreateBoard, db: Session = Depends(
         exceptions
             ValueError: 이미 존재하는 이름으로 게시판을 생성하려는 경우
     '''
-    print(created_board)
     if board_name_validator(created_board.name, db):
         raise ValueError('같은 이름의 게시판이 이미 존재합니다.')
     _board = Board(

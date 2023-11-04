@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from database import get_db
-from domain.post import post_schema
-from models import Post
+from src.core.database import get_db
+from src.domain.post import post_schema
+from src.core.models import Post
 
 router = APIRouter(
     prefix="/post"
@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.post("/create")
-def post_create(created_post: post_schema.CreatePost, db: Session = Depends(get_db)):
+def post_create(created_post: post_schema.Post, db: Session = Depends(get_db)):
     '''
     게시글 생성 함수
 
@@ -35,7 +35,7 @@ def post_create(created_post: post_schema.CreatePost, db: Session = Depends(get_
 
 
 @router.put("/update")
-def post_update(updated_post: post_schema.UpdatePost, db: Session = Depends(get_db)):
+def post_update(updated_post: post_schema.Post, db: Session = Depends(get_db)):
     '''
     게시글 수정 함수
 

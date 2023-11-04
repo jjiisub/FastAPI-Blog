@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from domain.board import board_router
-from domain.post import post_router
-from domain.user import user_router
+from src.domain.board import board_router
+from src.domain.post import post_router
+from src.domain.user import user_router
 
 app = FastAPI()
 
