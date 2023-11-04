@@ -36,7 +36,9 @@ class Board(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     public = Column(Boolean, nullable=False)
-    posts = relationship("Post", backref="board")
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    post_count = Column(Integer, default=0, nullable=False)
+    user = relationship("User", backref="boards")
 
 
 class Post(Base):
@@ -52,6 +54,9 @@ class Post(Base):
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    board_id = Column(Integer, ForeignKey("board.id"))
+    board_id = Column(Integer, ForeignKey("board.id"), nullable=False)
     title = Column(String, nullable=False)
     content = Column(Text, nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    board = relationship("Board", backref="posts")
+    user = relationship("User", backref="posts")

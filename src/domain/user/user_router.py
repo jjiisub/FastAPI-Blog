@@ -13,7 +13,7 @@ from src.core.database import get_db
 from src.domain.user import user_schema
 from src.core.redis_config import get_redis
 
-ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 10
+ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/login')
 
@@ -51,7 +51,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     
     access_token = secrets.token_hex(32)
     rd = get_redis()
-    rd.set(access_token, user.email)
+    rd.set(access_token, user.id)
     rd.expire(access_token, ACCESS_TOKEN_EXPIRE_SECONDS)
 
     return {
@@ -63,8 +63,8 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 # @router.get("/curr_user")
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     rd = get_redis()
-    user_email = rd.get(token)
-    return user_email
+    user_id = int(rd.get(token))
+    return user_id
 
 @router.post("/logout")
 def logout(token: Annotated[str, Depends(oauth2_scheme)]):

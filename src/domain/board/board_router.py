@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.core.models import Board
 from src.core.database import get_db
 from src.domain.board import board_schema
-from src.core.models import Board
+from src.domain.user.user_router import get_current_user
 
 router = APIRouter(
     prefix="/board"
@@ -31,7 +32,9 @@ def board_name_validator(board_name: str, db: Session = Depends(get_db)):
 
 
 @router.post("/create")
-def board_create(created_board: board_schema.CreateBoard, db: Session = Depends(get_db)):
+def board_create(created_board: board_schema.CreateBoard,
+                 db: Session = Depends(get_db),
+                 curr_user_id: int = Depends(get_current_user)):
     '''
     게시판 생성 함수
 
@@ -48,10 +51,11 @@ def board_create(created_board: board_schema.CreateBoard, db: Session = Depends(
             ValueError: 이미 존재하는 이름으로 게시판을 생성하려는 경우
     '''
     if board_name_validator(created_board.name, db):
-        raise ValueError('같은 이름의 게시판이 이미 존재합니다.')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
     _board = Board(
         name = created_board.name,
-        public = created_board.public
+        public = created_board.public,
+        user_id = curr_user_id
     )
     db.add(_board)
     db.commit()
@@ -59,7 +63,9 @@ def board_create(created_board: board_schema.CreateBoard, db: Session = Depends(
 
 
 @router.put("/update")
-def board_update(updated_board: board_schema.UpdateBoard, db: Session = Depends(get_db)):
+def board_update(updated_board: board_schema.UpdateBoard,
+                 db: Session = Depends(get_db),
+                 curr_user_id: int = Depends(get_current_user)):
     '''
     게시판 수정 함수
 
@@ -77,9 +83,11 @@ def board_update(updated_board: board_schema.UpdateBoard, db: Session = Depends(
     '''
     _board = db.query(Board).get(updated_board.id)
     if not _board:
-        raise Exception("존재하지 않는 게시판 입니다.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
+    if _board.user_id != curr_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="자신이 생성한 게시판만 수정할 수 있습니다.")
     if board_name_validator(updated_board.name, db):
-        raise ValueError('같은 이름의 게시판이 이미 존재합니다.')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
     _board.name = updated_board.name
     _board.public = updated_board.public
     db.commit()
@@ -87,7 +95,9 @@ def board_update(updated_board: board_schema.UpdateBoard, db: Session = Depends(
 
 
 @router.delete("/delete/{board_id}")
-def board_delete(board_id: int, db: Session = Depends(get_db)):
+def board_delete(board_id: int,
+                 db: Session = Depends(get_db),
+                 curr_user_id: int = Depends(get_current_user)):
     '''
     게시판 삭제 함수
 
@@ -106,14 +116,18 @@ def board_delete(board_id: int, db: Session = Depends(get_db)):
     '''
     _board = db.query(Board).get(board_id)
     if not _board:
-        raise Exception("존재하지 않는 게시판 입니다.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
+    if _board.user_id != curr_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="자신이 생성한 게시판만 수정할 수 있습니다.")
     db.delete(_board)
     db.commit()
     return {'msg':'삭제되었습니다.'}
 
 
 @router.get("/get/{board_id}")
-def board_detail(board_id : int, db: Session = Depends(get_db)):
+def board_detail(board_id : int,
+                 db: Session = Depends(get_db),
+                 curr_user_id: int = Depends(get_current_user)):
     '''
     게시판 상세 조회 함수
 
@@ -131,12 +145,16 @@ def board_detail(board_id : int, db: Session = Depends(get_db)):
     '''
     _board = db.query(Board).get(board_id)
     if not _board:
-        return {'msg': "존재하지 않는 게시판 입니다."}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
+    if not _board.public and _board.user_id != curr_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시판 조회 권한이 없습니다.")
     return _board
 
 
-@router.get("/list")
-def board_list(db: Session = Depends(get_db)):
+@router.get("/list/{page}")
+def board_list(db: Session = Depends(get_db),
+               curr_user_id: int = Depends(get_current_user),
+               page: int = 0):
     '''
     게시판 목록 조회 함수
 
@@ -148,5 +166,12 @@ def board_list(db: Session = Depends(get_db)):
         Returns
             전체 게시판 목록
     '''
-    _board_list = db.query(Board).all()
-    return _board_list
+    size = 2
+    _board_list = db.query(Board).filter((Board.user_id == curr_user_id) | (Board.public)).order_by(Board.post_count.desc())
+    total = _board_list.count()
+    board_list_paged = _board_list.offset(page*size).limit(size).all()
+
+    return {
+        "board_count": total,
+        "board_list": board_list_paged
+    }
