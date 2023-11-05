@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
 from src.utils.config import Settings
+from src.utils.auth import get_current_user
 from src.core.database import get_db
 from src.core.models import Post, Board
-from src.domain.post import post_schema
-from src.domain.user.user_router import get_current_user
+from src.domain.post.post_schema import Post
+# from src.domain.user.user_router import get_current_user
 
 router = APIRouter(
     prefix="/post"
@@ -14,7 +15,7 @@ router = APIRouter(
 
 @router.post("/create/{board_id}")
 def post_create(board_id: int,
-                created_post: post_schema.Post,
+                created_post: Post,
                 db: Session = Depends(get_db),
                 curr_user_id: int = Depends(get_current_user)):
     '''
@@ -54,7 +55,7 @@ def post_create(board_id: int,
 
 @router.patch("/update/{post_id}")
 def post_update(post_id: int,
-                updated_post: post_schema.Post,
+                updated_post: Post,
                 db: Session = Depends(get_db),
                 curr_user_id: int = Depends(get_current_user)):
     '''

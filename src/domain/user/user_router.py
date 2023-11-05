@@ -12,12 +12,10 @@ from src.domain.user import user_schema
 from src.core.redis_config import get_redis
 from src.utils.config import Settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/login')
-
 router = APIRouter(
     prefix="/user"
 )
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/login')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -84,12 +82,12 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         "user_email": user.email
     }
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    rd = get_redis()
-    user_id = rd.get(token)
-    if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='로그인이 필요합니다.')
-    return int(user_id)
+# def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+#     rd = get_redis()
+#     user_id = rd.get(token)
+#     if not user_id:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='로그인이 필요합니다.')
+#     return int(user_id)
 
 @router.post("/logout")
 def logout(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -98,8 +96,8 @@ def logout(token: Annotated[str, Depends(oauth2_scheme)]):
 
     입력받은 access token을 redis에서 삭제
 
-    Arguements:
-            token (oauth2_scheme): 현재 로그인되어 있는 access token 
+        Arguements:
+                token (str): 현재 로그인되어 있는 access token 
 
         Returns:
             로그아웃 완료 메시지
