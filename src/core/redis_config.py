@@ -1,11 +1,12 @@
 import redis
 
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DATABASE = 0
+from src.utils.config import Settings
+
 
 def get_redis():
-
-    rd = redis.Redis(host='localhost', port=6379, db=0)
+    '''
+    Redis 연결 관리 함수
+    '''
+    rd = redis.Redis(host=Settings().REDIS_HOST, port=Settings().REDIS_PORT, db=Settings().REDIS_DATABASE)
     if rd: return rd
     else: raise Exception("Redis가 연결되지 않았습니다.")
