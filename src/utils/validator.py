@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.core.models import User, Board
-from src.core.database import get_db
+from src.core.db_config import get_db
 
 def board_name_validator(board_name: str, db: Session = Depends(get_db)):
     '''
@@ -12,7 +12,7 @@ def board_name_validator(board_name: str, db: Session = Depends(get_db)):
 
         Arguments:
             board_name (str): 게시판의 이름
-            db: DB 세션
+            db (Session): DB 세션
         
         Raises:
             HTTP_400_BAD_REQUEST: 같은 이름의 게시판이 이미 존재하는 경우
@@ -32,7 +32,7 @@ def user_email_validator(email: str, db: Session):
 
         Arguments:
             email (str): 유저의 이메일
-            db: DB 세션
+            db (Session): DB 세션
         
         Raises:
             HTTP_400_BAD_REQUEST: 같은 이메일의 유저가 이미 존재하는 경우

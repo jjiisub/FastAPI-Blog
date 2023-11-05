@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 
 from src.utils.config import Settings
 from src.utils.auth import get_current_user
-from src.core.database import get_db
+from src.core.db_config import get_db
 from src.core.models import Post, Board
 from src.domain.post.post_schema import Post
-# from src.domain.user.user_router import get_current_user
+from src.utils.db_utils import get_post_from_db, get_board_from_db
 
 router = APIRouter(
     prefix="/post"
@@ -26,7 +26,7 @@ def post_create(board_id: int,
         Arguements:
             board_id (int): 게시글을 작성할 게시판 ID
             created_post (Post): 게시글 입력 Schema
-            db: DB 세션
+            db (Session): DB 세션
             curr_user_id (int): 현재 로그인된 유저 ID
 
         Raises:
@@ -36,10 +36,8 @@ def post_create(board_id: int,
         Returns:
             게시글 생성 완료 메시지
     '''
-    board = db.query(Board).get(board_id)
-    if not board:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시판을 찾을 수 없습니다.")
-    if not board.public and board.user_id != curr_user_id:
+    _board = get_board_from_db(board_id, db)
+    if not _board.public and _board.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 작성 권한이 없습니다.")
     _post = Post(
         board_id = board_id,
@@ -48,7 +46,7 @@ def post_create(board_id: int,
         user_id = curr_user_id
     )
     db.add(_post)
-    board.post_count += 1
+    _board.post_count += 1
     db.commit()
     return {'msg': '게시글이 생성되었습니다.'}
 
@@ -66,7 +64,7 @@ def post_update(post_id: int,
         Arguements:
             post_id (int): 수정할 게시글 ID
             updated_post (Post): 게시글 입력 Schema
-            db: DB 세션
+            db (Session): DB 세션
             curr_user_id (int): 현재 로그인된 유저 ID
 
         Raises:
@@ -77,9 +75,7 @@ def post_update(post_id: int,
         Returns:
             게시글 수정 완료 메시지
     '''
-    _post = db.query(Post).get(post_id)
-    if not _post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시글을 찾을 수 없습니다.")
+    _post = get_post_from_db(post_id, db)
     if _post.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 수정 권한이 없습니다.")
     _post.title = updated_post.title
@@ -99,23 +95,21 @@ def post_delete(post_id : int,
 
         Arguements:
             post_id (int): 삭제할 게시글의 ID
-            db : DB 세션
+            db (Session): DB 세션
             curr_user_id (int): 현재 로그인된 유저 ID
 
         Raises:
             HTTP_401_UNAUTHORIZED: 해당 게시글 삭제 권한이 없는 경우
             HTTP_404_NOT_FOUND: 해당 게시글이 존재하지 않는 경우
+            HTTP_404_NOT_FOUND: 게시글이 작성된 게시판이 존재하지 않는 경우
 
         Returns:
             삭제 완료 메시지
     '''
-    _post = db.query(Post).get(post_id)
-    if not _post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시글을 찾을 수 없습니다.")
+    _post = get_post_from_db(post_id, db)
     if _post.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 삭제 권한이 없습니다.")
-    
-    _board = db.query(Board).get(_post.board_id)
+    _board = get_board_from_db(_post.board_id, db)
     _board.post_count -= 1
     db.delete(_post)
     db.commit()
@@ -133,7 +127,7 @@ def post_detail(post_id : int,
 
         Arguements:
             post_id (int): 조회할 게시글의 ID
-            db: DB 세션
+            db (Session): DB 세션
             curr_user_id (int): 현재 로그인된 유저 ID
 
         Raises:
@@ -143,12 +137,10 @@ def post_detail(post_id : int,
         Returns:
             조회하는 게시글 객체
     '''
-    post = db.query(Post).get(post_id)
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시글을 찾을 수 없습니다.")
-    if not post.board.public and post.board.user_id != curr_user_id:
+    _post = get_post_from_db(post_id, db)
+    if not _post.board.public and _post.board.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 조회 권한이 없습니다.")
-    return post
+    return _post
 
 
 @router.get("/list/{board_id}/{page}")
@@ -163,7 +155,7 @@ def post_list(board_id: int,
 
         Arguements:
             board_id (int): 조회하려는 게시판 ID
-            db: DB 세션
+            db (Session): DB 세션
             curr_user_id (int): 현재 로그인된 유저 ID
             page (int): 조회하려는 게시글 목록의 페이지
 
@@ -175,10 +167,8 @@ def post_list(board_id: int,
             post_count (int): 전체 게시글 수
             post_list (list): 해당 페이지의 게시글 목록
     '''
-    board = db.query(Board).get(board_id)
-    if not board:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시판을 찾을 수 없습니다.")
-    if not board.public and board.user_id != curr_user_id:
+    _board = get_board_from_db(board_id, db)
+    if not _board.public and _board.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시판 조회 권한이 없습니다.")
     _post_list = db.query(Board).get(board_id).posts
     size = Settings().PAGE_SIZE
