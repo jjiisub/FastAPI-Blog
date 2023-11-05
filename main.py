@@ -6,6 +6,6 @@ from src.domain.user import user_router
 
 app = FastAPI()
 
+app.include_router(user_router.router, tags=["User"])
 app.include_router(board_router.router, tags=["Board"])
 app.include_router(post_router.router, tags=["Post"])
-app.include_router(user_router.router, tags=["User"])
