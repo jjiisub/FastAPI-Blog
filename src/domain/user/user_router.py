@@ -11,6 +11,7 @@ from src.core.database import get_db
 from src.domain.user import user_schema
 from src.core.redis_config import get_redis
 from src.utils.config import Settings
+from src.utils.validator import user_email_validator
 
 router = APIRouter(
     prefix="/user"
@@ -40,9 +41,7 @@ def user_create(created_user: user_schema.CreateUser, db: Session = Depends(get_
         Returns:
             회원가입 완료 메시지
     '''
-    user = get_user(created_user.email, db)
-    if user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이메일의 계정이 이미 존재합니다.")
+    user_email_validator(created_user.email, db)
     _user = User(
         email = created_user.email,
         fullname = created_user.fullname,
@@ -70,6 +69,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
             user_email: 로그인한 유저의 이메일
     '''
     user = get_user(form.username, db)
+    # user_email_validator(created_user.email, db)
     if not user or not pwd_context.verify(form.password, user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='이메일 또는 비밀번호가 잘못되었습니다.')
     access_token = secrets.token_hex(32)

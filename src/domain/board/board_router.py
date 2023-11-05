@@ -5,31 +5,33 @@ from src.utils.config import Settings
 from src.core.models import Board
 from src.core.database import get_db
 from src.domain.board import board_schema
-from src.domain.user.user_router import get_current_user
+# from src.domain.user.user_router import get_current_user
+from src.utils.auth import get_current_user
+from src.utils.validator import board_name_validator
 
 router = APIRouter(
     prefix="/board"
 )
 
 
-def board_name_validator(board_name: str, db: Session = Depends(get_db)):
-    '''
-    게시판 이름 중복 체크 함수
+# def board_name_validator(board_name: str, db: Session = Depends(get_db)):
+#     '''
+#     게시판 이름 중복 체크 함수
 
-    입력받은 게시판 이름이 이미 DB에 존재하는지 확인
+#     입력받은 게시판 이름이 이미 DB에 존재하는지 확인
 
-        Arguments:
-            board_name (str): 입력받은 게시판의 이름
-            db: DB 세션
+#         Arguments:
+#             board_name (str): 입력받은 게시판의 이름
+#             db: DB 세션
         
-        Returns:
-            True: 이미 같은 이름의 게시판이 존재하는 경우
-            False: 같은 이름의 게시판이 존재하지 않는 경우
-    '''
-    if db.query(Board).filter_by(name=board_name).all():
-        return True
-    else:
-        return False
+#         Returns:
+#             True: 이미 같은 이름의 게시판이 존재하는 경우
+#             False: 같은 이름의 게시판이 존재하지 않는 경우
+#     '''
+#     if db.query(Board).filter_by(name=board_name).all():
+#         return True
+#     else:
+#         return False
 
 
 @router.post("/create")
@@ -51,8 +53,7 @@ def board_create(created_board: board_schema.Board,
         Returns:
             board 생성 완료 메시지
     '''
-    if board_name_validator(created_board.name, db):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
+    board_name_validator(created_board.name, db)
     _board = Board(
         name = created_board.name,
         public = created_board.public,
@@ -92,8 +93,7 @@ def board_update(board_id: int,
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
     if _board.user_id != curr_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="자신이 생성한 게시판만 수정할 수 있습니다.")
-    if board_name_validator(updated_board.name, db):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
+    board_name_validator(updated_board.name, db)
     _board.name = updated_board.name
     _board.public = updated_board.public
     db.commit()
