@@ -7,10 +7,10 @@ def foo():
     '''
     Function Description
 
-        Arguements
+        Arguements:
             a (int): integer
 
-        Returns
+        Returns:
             b (bool): boolean
     '''
     return
@@ -19,10 +19,10 @@ class poo():
     '''
     Class Description
 
-        Attributes
+        Attributes:
             ...
 
-        Methods
+        Methods:
             ...
     '''
 ```

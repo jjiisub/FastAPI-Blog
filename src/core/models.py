@@ -7,7 +7,7 @@ class User(Base):
     '''
     User Model
 
-        Attributes
+        Attributes:
             id (int): primary key
             fullname (str): 유저 전체 이름
             email (str): 유저 이메일
@@ -29,7 +29,9 @@ class Board(Base):
             id (int): primary key
             name (str): 게시판의 이름
             public (bool): 게시판 공개 여부 Flag
-            posts (list): 해당 게시판에 속한 게시글 목록
+            user_id (int): 게시판을 생성한 유저의 ID
+            post_count (int): 게시판의 게시글 수
+            posts (list): 게시판의 게시글 목록
     '''
     __tablename__ = "board"
 
@@ -38,18 +40,19 @@ class Board(Base):
     public = Column(Boolean, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     post_count = Column(Integer, default=0, nullable=False)
-    user = relationship("User", backref="boards")
+    # user = relationship("User", backref="boards")
 
 
 class Post(Base):
     '''
     Post Model (게시글)
 
-        Attributes
+        Attributes:
             id (int): primary key
             board_id (int): foreign key, Board 객체의 id
             title (str): 게시글의 제목
             content (str): 게시글의 내용
+
     '''
     __tablename__ = "post"
 
@@ -59,4 +62,4 @@ class Post(Base):
     content = Column(Text, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     board = relationship("Board", backref="posts")
-    user = relationship("User", backref="posts")
+    # user = relationship("User", backref="posts")

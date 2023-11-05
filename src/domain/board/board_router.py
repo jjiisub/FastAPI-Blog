@@ -16,13 +16,13 @@ def board_name_validator(board_name: str, db: Session = Depends(get_db)):
     '''
     게시판 이름 중복 체크 함수
 
-    입력받은 게시판 이름이 이미 사용되고 있는지 확인
+    입력받은 게시판 이름이 이미 DB에 존재하는지 확인
 
-        Arguments
+        Arguments:
             board_name (str): 입력받은 게시판의 이름
             db: DB 세션
         
-        Returns
+        Returns:
             True: 이미 같은 이름의 게시판이 존재하는 경우
             False: 같은 이름의 게시판이 존재하지 않는 경우
     '''
@@ -41,15 +41,15 @@ def board_create(created_board: board_schema.Board,
 
     새로운 board 객체를 생성하고 DB에 저장
 
-        Arguments
-            CreateBoard (name, public): 게시판 생성 입력 Schema
+        Arguments:
+            created_board (Board): 게시판 Schema
             db: DB 세션
 
-        Returns
-            생성한 board 객체
-        
-        exceptions
-            ValueError: 이미 존재하는 이름으로 게시판을 생성하려는 경우
+        Raises:
+            HTTP_400_BAD_REQUEST: 이미 존재하는 이름으로 게시판을 생성하려는 경우
+
+        Returns:
+            board 생성 완료 메시지
     '''
     if board_name_validator(created_board.name, db):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
@@ -60,7 +60,7 @@ def board_create(created_board: board_schema.Board,
     )
     db.add(_board)
     db.commit()
-    return _board
+    return {'msg': '게시판 생성이 완료되었습니다.'}
 
 
 @router.patch("/update/{board_id}")
@@ -73,18 +73,21 @@ def board_update(board_id: int,
 
     입력받은 id가 일치하는 게시판의 name과 public을 수정하고 DB 저장
 
-        Arguments
-            UpdatedBoard (id, name, public)
+        Arguments:
+            board_id (int): 수정하려는 게시판 ID
+            updated_board (Board): 게시판 Schema
             db: DB 세션
+            curr_user_id (int): 현재 로그인된 유저 ID
 
-        Returns
-            수정한 board 객체의 id
+        Raises:
+            HTTP_400_BAD_REQUEST: 해당하는 게시판이 존재하지 않는 경우
+            HTTP_401_UNAUTHORIZED: 해당 게시판의 수정 권한이 없는 경우
+            HTTP_404_NOT_FOUND: 이미 존재하는 이름으로 게시판을 수정하려는 경우
 
-        exceptions
-            ValueError: 이미 존재하는 이름으로 게시판을 수정하려는 경우
+        Returns:
+            게시판 수정 완료 메시지
     '''
     _board = db.query(Board).get(board_id)
-    # _board = db.query(Board).get(updated_board.id)
     if not _board:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
     if _board.user_id != curr_user_id:
@@ -94,7 +97,7 @@ def board_update(board_id: int,
     _board.name = updated_board.name
     _board.public = updated_board.public
     db.commit()
-    return _board.id
+    return {'msg': '게시판 수정이 완료되었습니다.'}
 
 
 @router.delete("/delete/{board_id}")
@@ -106,16 +109,17 @@ def board_delete(board_id: int,
 
     게시판 id를 입력받아 해당 게시판을 DB에서 삭제
 
-        Arguments
-            board_id (int): 삭제할 게시판의 id
+        Arguments:
+            board_id (int): 삭제할 게시판의 ID
             db : DB 세션
+            curr_user_id (int): 현재 로그인된 유저 ID
 
-        Returns
-            삭제 완료 메시지
+        Raises:
+            HTTP_401_UNAUTHORIZED: 해당 게시판의 삭제 권한이 없는 경우
+            HTTP_404_NOT_FOUND: 입력한 ID와 일치하는 게시판이 없는 경우
 
-        Exceptions
-            게시판 조회 불가 메시지: 입력한 id와 일치하는 게시판이 없는 경우
-
+        Returns:
+            게시판 삭제 완료 메시지
     '''
     _board = db.query(Board).get(board_id)
     if not _board:
@@ -136,15 +140,17 @@ def board_detail(board_id : int,
 
     게시판 ID를 입력받아 해당 게시판을 조회
 
-        Arguments
-            board_id (int): 조회할 게시판의 id
+        Arguments:
+            board_id (int): 조회할 게시판의 ID
             db: DB 세션
+            curr_user_id (int): 현재 로그인된 유저 ID
 
-        Returns
+        Raises:
+            HTTP_401_UNAUTHORIZED: 해당 게시판의 조회 권한이 없는 경우
+            HTTP_404_NOT_FOUND: 입력한 id와 일치하는 게시판이 없는 경우
+
+        Returns:
             조회하는 게시판 객체
-
-        Exceptions
-            게시판 조회 불가 메시지: 입력한 id와 일치하는 게시판이 없는 경우
     '''
     _board = db.query(Board).get(board_id)
     if not _board:
@@ -163,11 +169,13 @@ def board_list(db: Session = Depends(get_db),
 
     전체 게시판 목록을 조회
 
-        Arguments
+        Arguments:
             db: DB 세션
+            curr_user_id (int): 현재 로그인된 유저 ID
+            page (int): 조회하려는 게시판 목록의 페이지
 
-        Returns
-            전체 게시판 목록
+        Returns:
+            전체 게시판 목록의 해당 페이지
     '''
     size = Settings().PAGE_SIZE
 
