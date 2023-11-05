@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from src.core.database import Base
+from src.core.db_config import Base
 
 
 class User(Base):
@@ -25,7 +25,7 @@ class Board(Base):
     '''
     Board Model (게시판)
 
-        Attributes
+        Attributes:
             id (int): primary key
             name (str): 게시판의 이름
             public (bool): 게시판 공개 여부 Flag
@@ -62,4 +62,3 @@ class Post(Base):
     content = Column(Text, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     board = relationship("Board", backref="posts")
-    # user = relationship("User", backref="posts")
