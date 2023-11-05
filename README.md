@@ -8,7 +8,7 @@
 
 ## Installation
 
-```
+```bash
 $ git clone https://github.com/jjiisub/Elice-interview-project.git
 $ cd Elice-interview-project
 $ pip install -r requirements.txt
@@ -16,10 +16,15 @@ $ pip install -r requirements.txt
 
 ### .env File
 
-```
+```shell
+# .env
+
 ACCESS_TOKEN_EXPIRE_SECONDS=3600
 SQLALCHEMY_DATABASE_URL="postgresql://DB_USER:PASSWORD@DB_URL/DB_NAME"
 PAGE_SIZE=2
+REDIS_HOST="REDIS_URL"
+REDIS_PORT=6379
+REDIS_DATABASE=0
 ```
 
 ### Database
@@ -37,7 +42,7 @@ sqlalchemy.url = postgresql://DB_USER:PASSWORD@DB_URL/DB_NAME
 ```
 
 ```python
-## /migrations/env.py
+## migrations/env.py
 
 from src.core import models
 ...
@@ -65,30 +70,3 @@ $ uvicorn main:app --reload
 - `src/utils/db_utils.py` : DB로부터 객체 조회 및 예외 처리
 
 - `src/utils/validator.py` : 중복 예외 처리
-
-## Docstring
-
-```python
-def foo():
-    '''
-    Function Description
-
-        Arguements:
-            a (int): integer
-
-        Returns:
-            b (bool): boolean
-    '''
-    return
-
-class poo():
-    '''
-    Class Description
-
-        Attributes:
-            ...
-
-        Methods:
-            ...
-    '''
-```
