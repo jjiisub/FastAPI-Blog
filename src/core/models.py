@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
+
 from src.core.db_config import Base
 
 
@@ -40,7 +41,6 @@ class Board(Base):
     public = Column(Boolean, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     post_count = Column(Integer, default=0, nullable=False)
-    # user = relationship("User", backref="boards")
 
 
 class Post(Base):
@@ -49,10 +49,11 @@ class Post(Base):
 
         Attributes:
             id (int): primary key
-            board_id (int): foreign key, Board 객체의 id
+            board_id (int): foreign key, Board 객체의 ID
             title (str): 게시글의 제목
             content (str): 게시글의 내용
-
+            user_id (int): 게시글을 생성한 유저의 ID
+            board (Board): post가 작성된 board 객체
     '''
     __tablename__ = "post"
 

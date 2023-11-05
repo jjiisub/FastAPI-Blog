@@ -19,10 +19,10 @@ def get_user_from_db(user_email: str, db: Session):
         Returns:
             유저 객체
     '''
-    _user = db.query(User).filter(User.email==user_email).first()
-    if not _user:
+    user = db.query(User).filter(User.email==user_email).first()
+    if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='해당 이메일의 계정이 존재하지 않습니다.')
-    return _user
+    return user
 
 def get_board_from_db(board_id: int, db: Session):
     '''
@@ -40,10 +40,10 @@ def get_board_from_db(board_id: int, db: Session):
         Returns:
             게시판 객체
     '''
-    _board = db.query(Board).get(board_id)
-    if not _board:
+    board = db.query(Board).get(board_id)
+    if not board:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시판을 찾을 수 없습니다.")
-    return _board
+    return board
 
 def get_post_from_db(post_id: int, db: Session):
     '''
@@ -61,7 +61,7 @@ def get_post_from_db(post_id: int, db: Session):
         Returns:
             게시글 객체
     '''
-    _post = db.query(Post).get(post_id)
-    if not _post:
+    post = db.query(Post).get(post_id)
+    if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="게시글을 찾을 수 없습니다.")
-    return _post
+    return post

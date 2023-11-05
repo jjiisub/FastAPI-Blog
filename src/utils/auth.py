@@ -12,6 +12,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     현재 유저 정보 조회 함수
 
     인증 token으로 redis 로그인 세션을 조회하여 일치하는 유저의 id를 반환
+    
         Attributes:
                 token (str): 현재 로그인되어 있는 access token
             

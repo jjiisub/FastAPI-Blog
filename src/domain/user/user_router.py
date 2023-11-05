@@ -60,6 +60,10 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
             form (OAuth2PasswordRequestForm): 유저 로그인 form
             db (Session): DB 세션
 
+        Raises:
+            HTTP_401_UNAUTHORIZED: 이메일과 일치하는 계정이 없는 경우
+            HTTP_401_UNAUTHORIZED: 비밀번호가 일치하지 않는 경우
+
         Returns:
             access_token: 권한 인증 access token
             token_type: Bearer

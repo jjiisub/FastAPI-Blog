@@ -138,7 +138,7 @@ def board_list(db: Session = Depends(get_db),
     '''
     게시판 목록 조회 함수
 
-    전체 게시판 목록을 조회
+    접근 권한이 있는 전체 게시판 목록을 조회
 
         Arguments:
             db (Session): DB 세션

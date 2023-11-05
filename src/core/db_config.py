@@ -11,7 +11,9 @@ Base = declarative_base()
 
 
 def get_db():
-    '''DB 세션 관리 함수'''
+    '''
+    DB 세션 관리 함수
+    '''
     db = SessionLocal()
     try:
         yield db
