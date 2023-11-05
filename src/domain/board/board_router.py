@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.utils.config import Settings
 from src.core.models import Board
 from src.core.database import get_db
 from src.domain.board import board_schema
@@ -32,7 +33,7 @@ def board_name_validator(board_name: str, db: Session = Depends(get_db)):
 
 
 @router.post("/create")
-def board_create(created_board: board_schema.CreateBoard,
+def board_create(created_board: board_schema.Board,
                  db: Session = Depends(get_db),
                  curr_user_id: int = Depends(get_current_user)):
     '''
@@ -62,8 +63,9 @@ def board_create(created_board: board_schema.CreateBoard,
     return _board
 
 
-@router.put("/update")
-def board_update(updated_board: board_schema.UpdateBoard,
+@router.patch("/update/{board_id}")
+def board_update(board_id: int,
+                 updated_board: board_schema.Board,
                  db: Session = Depends(get_db),
                  curr_user_id: int = Depends(get_current_user)):
     '''
@@ -81,7 +83,8 @@ def board_update(updated_board: board_schema.UpdateBoard,
         exceptions
             ValueError: 이미 존재하는 이름으로 게시판을 수정하려는 경우
     '''
-    _board = db.query(Board).get(updated_board.id)
+    _board = db.query(Board).get(board_id)
+    # _board = db.query(Board).get(updated_board.id)
     if not _board:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 게시판 입니다.")
     if _board.user_id != curr_user_id:
@@ -166,7 +169,8 @@ def board_list(db: Session = Depends(get_db),
         Returns
             전체 게시판 목록
     '''
-    size = 2
+    size = Settings().PAGE_SIZE
+
     _board_list = db.query(Board).filter((Board.user_id == curr_user_id) | (Board.public)).order_by(Board.post_count.desc())
     total = _board_list.count()
     board_list_paged = _board_list.offset(page*size).limit(size).all()
