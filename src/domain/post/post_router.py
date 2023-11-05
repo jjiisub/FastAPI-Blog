@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
 from src.utils.config import Settings
-from src.utils.auth import get_current_user
+from src.utils.db_utils import get_post_from_db, get_board_from_db
+from src.utils.auth import get_current_user, auth_post_edit, auth_board_read
 from src.core.db_config import get_db
 from src.core.models import Post, Board
-from src.domain.post.post_schema import Post
-from src.utils.db_utils import get_post_from_db, get_board_from_db
+from src.domain.post import post_schema
 
 router = APIRouter(
     prefix="/post"
@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.post("/create/{board_id}")
 def post_create(board_id: int,
-                created_post: Post,
+                created_post: post_schema.Post,
                 db: Session = Depends(get_db),
                 curr_user_id: int = Depends(get_current_user)):
     '''
@@ -37,8 +37,7 @@ def post_create(board_id: int,
             게시글 생성 완료 메시지
     '''
     _board = get_board_from_db(board_id, db)
-    if not _board.public and _board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 작성 권한이 없습니다.")
+    auth_board_read(_board, curr_user_id)
     _post = Post(
         board_id = board_id,
         title = created_post.title,
@@ -53,7 +52,7 @@ def post_create(board_id: int,
 
 @router.patch("/update/{post_id}")
 def post_update(post_id: int,
-                updated_post: Post,
+                updated_post: post_schema.Post,
                 db: Session = Depends(get_db),
                 curr_user_id: int = Depends(get_current_user)):
     '''
@@ -76,8 +75,7 @@ def post_update(post_id: int,
             게시글 수정 완료 메시지
     '''
     _post = get_post_from_db(post_id, db)
-    if _post.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 수정 권한이 없습니다.")
+    auth_post_edit(_post, curr_user_id)
     _post.title = updated_post.title
     _post.content = updated_post.content
     db.commit()
@@ -107,8 +105,7 @@ def post_delete(post_id : int,
             삭제 완료 메시지
     '''
     _post = get_post_from_db(post_id, db)
-    if _post.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 삭제 권한이 없습니다.")
+    auth_post_edit(_post, curr_user_id)
     _board = get_board_from_db(_post.board_id, db)
     _board.post_count -= 1
     db.delete(_post)
@@ -138,8 +135,7 @@ def post_detail(post_id : int,
             조회하는 게시글 객체
     '''
     _post = get_post_from_db(post_id, db)
-    if not _post.board.public and _post.board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시글 조회 권한이 없습니다.")
+    auth_board_read(_post.board, curr_user_id)
     return _post
 
 
@@ -168,8 +164,7 @@ def post_list(board_id: int,
             post_list (list): 해당 페이지의 게시글 목록
     '''
     _board = get_board_from_db(board_id, db)
-    if not _board.public and _board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시판 조회 권한이 없습니다.")
+    auth_board_read(_board, curr_user_id)
     _post_list = db.query(Board).get(board_id).posts
     size = Settings().PAGE_SIZE
     return {

@@ -2,13 +2,12 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.utils.config import Settings
+from src.utils.db_utils import get_board_from_db
+from src.utils.validator import board_name_validator
+from src.utils.auth import get_current_user, auth_board_edit, auth_board_read
 from src.core.models import Board
 from src.core.db_config import get_db
 from src.domain.board import board_schema
-# from src.domain.user.user_router import get_current_user
-from src.utils.auth import get_current_user
-from src.utils.validator import board_name_validator
-from src.utils.db_utils import get_board_from_db
 
 router = APIRouter(
     prefix="/board"
@@ -70,8 +69,7 @@ def board_update(board_id: int,
             게시판 수정 완료 메시지
     '''
     _board = get_board_from_db(board_id, db)
-    if _board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="자신이 생성한 게시판만 수정할 수 있습니다.")
+    auth_board_edit(_board, curr_user_id)
     board_name_validator(updated_board.name, db)
     _board.name = updated_board.name
     _board.public = updated_board.public
@@ -101,8 +99,7 @@ def board_delete(board_id: int,
             게시판 삭제 완료 메시지
     '''
     _board = get_board_from_db(board_id, db)
-    if _board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="자신이 생성한 게시판만 수정할 수 있습니다.")
+    auth_board_edit(_board, curr_user_id)
     db.delete(_board)
     db.commit()
     return {'msg':'삭제되었습니다.'}
@@ -130,8 +127,7 @@ def board_detail(board_id : int,
             조회하는 게시판 객체
     '''
     _board = get_board_from_db(board_id, db)
-    if not _board.public and _board.user_id != curr_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="게시판 조회 권한이 없습니다.")
+    auth_board_read(_board, curr_user_id)
     return _board
 
 
