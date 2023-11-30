@@ -37,7 +37,7 @@ class Board(Base):
     __tablename__ = "board"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     public = Column(Boolean, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     post_count = Column(Integer, default=0, nullable=False)

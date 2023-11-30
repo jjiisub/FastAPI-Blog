@@ -44,8 +44,11 @@ def user_create(created_user: user_schema.CreateUser, db: Session = Depends(get_
         fullname = created_user.fullname,
         password = pwd_context.hash(created_user.password1)
     )
-    db.add(_user)
-    db.commit()
+    try:
+        db.add(_user)
+        db.commit()
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이메일의 계정이 이미 존재합니다.")
     return {'msg': '회원가입이 완료되었습니다.'}
 
 

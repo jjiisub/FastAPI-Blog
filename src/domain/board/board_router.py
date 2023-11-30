@@ -39,8 +39,11 @@ def board_create(created_board: board_schema.Board,
         public = created_board.public,
         user_id = curr_user_id
     )
-    db.add(_board)
-    db.commit()
+    try:
+        db.add(_board)
+        db.commit()
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="같은 이름의 게시판이 이미 존재합니다.")
     return {'msg': '게시판 생성이 완료되었습니다.'}
 
 
