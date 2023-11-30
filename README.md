@@ -1,9 +1,10 @@
-# Elice Backend Interview Project
+# FastAPI-Blog
 
 ## Environment
 
 - Python 3.11.6
 - FastAPI 0.104.1
+- SQLalchemy 2.0.22
 - PostgreSQL 14.9
 
 ## Installation
@@ -17,7 +18,7 @@ $ pip install -r requirements.txt
 ### .env File
 
 ```shell
-# .env
+## .env
 
 ACCESS_TOKEN_EXPIRE_SECONDS=3600
 SQLALCHEMY_DATABASE_URL="postgresql://DB_USER:PASSWORD@DB_URL/DB_NAME"
